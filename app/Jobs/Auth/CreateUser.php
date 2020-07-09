@@ -8,6 +8,8 @@ use Artisan;
 
 class CreateUser extends Job
 {
+    protected $user;
+
     protected $request;
 
     /**
@@ -27,39 +29,44 @@ class CreateUser extends Job
      */
     public function handle()
     {
-        $user = User::create($this->request->input());
+        \DB::transaction(function () {
+            $this->user = User::create($this->request->input());
 
-        // Upload picture
-        if ($this->request->file('picture')) {
-            $media = $this->getMedia($this->request->file('picture'), 'users');
+            // Upload picture
+            if ($this->request->file('picture')) {
+                $media = $this->getMedia($this->request->file('picture'), 'users');
 
-            $user->attachMedia($media, 'picture');
-        }
+                $this->user->attachMedia($media, 'picture');
+            }
 
-        if ($this->request->has('dashboards')) {
-            $user->dashboards()->attach($this->request->get('dashboards'));
-        }
+            if ($this->request->has('dashboards')) {
+                $this->user->dashboards()->attach($this->request->get('dashboards'));
+            }
 
-        if ($this->request->has('permissions')) {
-            $user->permissions()->attach($this->request->get('permissions'));
-        }
+            if ($this->request->has('permissions')) {
+                $this->user->permissions()->attach($this->request->get('permissions'));
+            }
 
-        $user->roles()->attach($this->request->get('roles'));
+            if ($this->request->has('roles')) {
+                $this->user->roles()->attach($this->request->get('roles'));
+            }
 
-        $user->companies()->attach($this->request->get('companies'));
+            if ($this->request->has('companies')) {
+                $this->user->companies()->attach($this->request->get('companies'));
+            }
 
-        Artisan::call('cache:clear');
+            if (empty($this->user->companies)) {
+                return;
+            }
 
-        // Add User Dashboard
-        foreach ($user->companies as $company) {
-            Artisan::call('user:seed', [
-                'user' => $user->id,
-                'company' => $company->id,
-            ]);
-        }
+            foreach ($this->user->companies as $company) {
+                Artisan::call('user:seed', [
+                    'user' => $this->user->id,
+                    'company' => $company->id,
+                ]);
+            }
+        });
 
-        Artisan::call('cache:clear');
-
-        return $user;
+        return $this->user;
     }
 }

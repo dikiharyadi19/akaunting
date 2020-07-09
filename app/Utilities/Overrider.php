@@ -36,18 +36,18 @@ class Overrider
 
         // Email
         $email_protocol = setting('email.protocol', 'mail');
-        config(['mail.driver' => $email_protocol]);
+        config(['mail.default' => $email_protocol]);
         config(['mail.from.name' => setting('company.name')]);
         config(['mail.from.address' => setting('company.email')]);
 
         if ($email_protocol == 'sendmail') {
-            config(['mail.sendmail' => setting('email.sendmail_path')]);
+            config(['mail.mailers.sendmail.path' => setting('email.sendmail_path')]);
         } elseif ($email_protocol == 'smtp') {
-            config(['mail.host' => setting('email.smtp_host')]);
-            config(['mail.port' => setting('email.smtp_port')]);
-            config(['mail.username' => setting('email.smtp_username')]);
-            config(['mail.password' => setting('email.smtp_password')]);
-            config(['mail.encryption' => setting('email.smtp_encryption')]);
+            config(['mail.mailers.smtp.host' => setting('email.smtp_host')]);
+            config(['mail.mailers.smtp.port' => setting('email.smtp_port')]);
+            config(['mail.mailers.smtp.username' => setting('email.smtp_username')]);
+            config(['mail.mailers.smtp.password' => setting('email.smtp_password')]);
+            config(['mail.mailers.smtp.encryption' => setting('email.smtp_encryption')]);
         }
 
         // Locale
@@ -64,10 +64,8 @@ class Overrider
         $currencies = Currency::all();
 
         foreach ($currencies as $currency) {
-            if (!isset($currency->precision)) {
-                continue;
-            }
-
+            config(['money.' . $currency->code . '.name' => $currency->name]);
+            config(['money.' . $currency->code . '.rate' => $currency->rate]);
             config(['money.' . $currency->code . '.precision' => $currency->precision]);
             config(['money.' . $currency->code . '.symbol' => $currency->symbol]);
             config(['money.' . $currency->code . '.symbol_first' => $currency->symbol_first]);

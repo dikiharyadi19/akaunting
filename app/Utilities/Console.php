@@ -2,13 +2,18 @@
 
 namespace App\Utilities;
 
+use Illuminate\Console\Application;
 use Symfony\Component\Process\Process;
 
 class Console
 {
-    public static function run($command, $all_output = false, $timeout = 0)
+    public static function run($string, $all_output = false, $timeout = 0)
     {
-        $process = new Process($command, base_path());
+        $command = Application::formatCommandString($string);
+
+        logger('Console command:: ' . $command);
+
+        $process = Process::fromShellCommandline($command, base_path());
         $process->setTimeout($timeout);
 
         $process->run();
@@ -17,6 +22,10 @@ class Console
             return true;
         }
 
-        return $all_output ? $process->getOutput() : $process->getErrorOutput();
+        $output = $all_output ? $process->getOutput() : $process->getErrorOutput();
+
+        logger('Console output:: ' . $output);
+
+        return $output;
     }
 }

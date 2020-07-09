@@ -13,6 +13,7 @@ return [
     'price'                 => 'Pris',
     'sub_total'             => 'Sum',
     'discount'              => 'Rabatt',
+    'item_discount'         => 'Linjerabatt',
     'tax_total'             => 'Totalt mva',
     'total'                 => 'Totalt',
 
@@ -29,6 +30,8 @@ return [
     'add_payment'           => 'Legg til betaling',
     'mark_paid'             => 'Merk som betalt',
     'mark_sent'             => 'Merk som sendt',
+    'mark_viewed'           => 'Merk som sett',
+    'mark_cancelled'        => 'Merk som kansellert',
     'download_pdf'          => 'Last ned PDF',
     'send_mail'             => 'Send e-post',
     'all_invoices'          => 'Logg inn for å se alle fakturaer',
@@ -38,22 +41,29 @@ return [
     'accept_payments'       => 'Aksepter online betalinger',
 
     'statuses' => [
-        'draft'             => 'Utkast',
+        'draft'             => 'Kladd',
         'sent'              => 'Sendt',
-        'viewed'            => 'Åpnet',
+        'viewed'            => 'Sett',
         'approved'          => 'Godkjent',
         'partial'           => 'Delvis',
         'paid'              => 'Betalt',
+        'overdue'           => 'Forfalt',
+        'unpaid'            => 'Ubetalt',
+        'cancelled'         => 'Kansellert',
     ],
 
     'messages' => [
-        'email_sent'        => 'E-post med faktura har blitt sendt.',
-        'marked_sent'       => 'Faktura merket som sendt.',
+        'email_sent'        => 'Faktura e-post er blitt sendt!',
+        'marked_sent'       => 'Faktura merket som sendt!',
+        'marked_paid'       => 'Faktura merket som betalt!',
+        'marked_viewed'     => 'Faktura merket som sett!',
+        'marked_cancelled'  => 'Faktura merket som kansellert!',
         'email_required'    => 'E-postadresse må fylles inn.',
         'draft'             => 'Dette er en <b>KLADD</b> for fakturaen som vil bli oppdatert etter at den er sendt.',
 
         'status' => [
             'created'       => 'Opprettet :date',
+            'viewed'        => 'Sett',
             'send' => [
                 'draft'     => 'Ikke sendt',
                 'sent'      => 'Sendt :date',
@@ -62,11 +72,6 @@ return [
                 'await'     => 'Avventer betaling',
             ],
         ],
-    ],
-
-    'notification' => [
-        'message'           => 'Du mottar denne e-posten med faktura til :customer, pålydende :amount.',
-        'button'            => 'Betal nå',
     ],
 
 ];

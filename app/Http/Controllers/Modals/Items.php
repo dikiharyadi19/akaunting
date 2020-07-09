@@ -17,9 +17,9 @@ class Items extends Controller
     public function __construct()
     {
         // Add CRUD permission check
-        $this->middleware('permission:create-common-items')->only(['create', 'store', 'duplicate', 'import']);
-        $this->middleware('permission:read-common-items')->only(['index', 'show', 'edit', 'export']);
-        $this->middleware('permission:update-common-items')->only(['update', 'enable', 'disable']);
+        $this->middleware('permission:create-common-items')->only('create', 'store', 'duplicate', 'import');
+        $this->middleware('permission:read-common-items')->only('index', 'show', 'edit', 'export');
+        $this->middleware('permission:update-common-items')->only('update', 'enable', 'disable');
         $this->middleware('permission:delete-common-items')->only('destroy');
     }
 
@@ -30,7 +30,7 @@ class Items extends Controller
      */
     public function create(IRequest $request)
     {
-        $categories = Category::type('item')->enabled()->orderBy('name')->pluck('name', 'id');
+        $categories = Category::item()->enabled()->orderBy('name')->pluck('name', 'id');
 
         $taxes = Tax::enabled()->orderBy('name')->get()->pluck('title', 'id');
 

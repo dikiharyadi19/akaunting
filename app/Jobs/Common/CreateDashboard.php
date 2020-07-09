@@ -4,9 +4,13 @@ namespace App\Jobs\Common;
 
 use App\Abstracts\Job;
 use App\Models\Common\Dashboard;
+use App\Models\Common\Widget;
+use App\Utilities\Widgets;
 
 class CreateDashboard extends Job
 {
+    protected $dashboard;
+
     protected $request;
 
     /**
@@ -28,9 +32,15 @@ class CreateDashboard extends Job
     {
         $this->request['enabled'] = $this->request['enabled'] ?? 1;
 
-        $this->dashboard = Dashboard::create($this->request->all());
+        \DB::transaction(function () {
+            $this->dashboard = Dashboard::create($this->request->only(['company_id', 'name', 'enabled']));
 
-        $this->attachToUser();
+            $this->attachToUser();
+
+            if ($this->request->has('with_widgets')) {
+                $this->createWidgets();
+            }
+        });
 
         return $this->dashboard;
     }
@@ -48,5 +58,25 @@ class CreateDashboard extends Job
         }
 
         $this->dashboard->users()->attach($user);
+    }
+
+    protected function createWidgets()
+    {
+        $widgets = Widgets::getClasses(false);
+
+        $sort = 1;
+
+        foreach ($widgets as $class => $name) {
+            Widget::create([
+                'company_id' => $this->dashboard->company_id,
+                'dashboard_id' => $this->dashboard->id,
+                'class' => $class,
+                'name' => $name,
+                'sort' => $sort,
+                'settings' => (new $class())->getDefaultSettings(),
+            ]);
+
+            $sort++;
+        }
     }
 }

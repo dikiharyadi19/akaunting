@@ -23,11 +23,11 @@ class Invoices extends Controller
      */
     public function index()
     {
-        $invoices = Invoice::with(['contact', 'items', 'payments', 'histories'])
+        $invoices = Invoice::with('contact', 'histories', 'items', 'payments')
             ->accrued()->where('contact_id', user()->contact->id)
             ->collect(['invoice_number'=> 'desc']);
 
-        $categories = collect(Category::type('income')->enabled()->orderBy('name')->pluck('name', 'id'));
+        $categories = collect(Category::income()->enabled()->orderBy('name')->pluck('name', 'id'));
 
         $statuses = $this->getInvoiceStatuses();
 
@@ -100,7 +100,7 @@ class Invoices extends Controller
             if ($invoice->currency_code != $item->currency_code) {
                 $item->default_currency_code = $invoice->currency_code;
 
-                $amount = $item->getAmountConvertedFromCustomDefault();
+                $amount = $item->getAmountConvertedFromDefault();
             }
 
             $paid += $amount;
@@ -129,7 +129,7 @@ class Invoices extends Controller
             if ($invoice->currency_code != $item->currency_code) {
                 $item->default_currency_code = $invoice->currency_code;
 
-                $amount = $item->getAmountConvertedFromCustomDefault();
+                $amount = $item->getAmountConvertedFromDefault();
             }
 
             $paid += $amount;

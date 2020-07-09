@@ -30,7 +30,7 @@ abstract class Controller extends BaseController
      *
      * @return void
      */
-    protected function setPermissions()
+    public function setPermissions()
     {
         // No need to check for permission in console
         if (app()->runningInConsole()) {
@@ -64,9 +64,9 @@ abstract class Controller extends BaseController
         }
 
         // Add CRUD permission check
-        $this->middleware('permission:create-' . $controller)->only(['create', 'store', 'duplicate', 'import']);
-        $this->middleware('permission:read-' . $controller)->only(['index', 'show', 'edit', 'export']);
-        $this->middleware('permission:update-' . $controller)->only(['update', 'enable', 'disable']);
+        $this->middleware('permission:create-' . $controller)->only('create', 'store', 'duplicate', 'import');
+        $this->middleware('permission:read-' . $controller)->only('index', 'show', 'edit', 'export');
+        $this->middleware('permission:update-' . $controller)->only('update', 'enable', 'disable');
         $this->middleware('permission:delete-' . $controller)->only('destroy');
     }
 
@@ -89,34 +89,5 @@ abstract class Controller extends BaseController
         $items = $items instanceof Collection ? $items : Collection::make($items);
 
         return new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
-    }
-
-    /**
-     * Dispatch a job to its appropriate handler and return a response array for ajax calls.
-     *
-     * @param mixed $job
-     * @return mixed
-     */
-    public function ajaxDispatch($job)
-    {
-        try {
-            $data = $this->dispatch($job);
-
-            $response = [
-                'success' => true,
-                'error' => false,
-                'data' => $data,
-                'message' => '',
-            ];
-        } catch(\Exception $e) {
-            $response = [
-                'success' => false,
-                'error' => true,
-                'data' => null,
-                'message' => $e->getMessage(),
-            ];
-        }
-
-        return $response;
     }
 }

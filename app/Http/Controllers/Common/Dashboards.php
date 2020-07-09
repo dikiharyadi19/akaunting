@@ -24,9 +24,9 @@ class Dashboards extends Controller
     public function __construct()
     {
         // Add CRUD permission check
-        $this->middleware('permission:create-common-dashboards')->only(['create', 'store', 'duplicate', 'import']);
-        $this->middleware('permission:read-common-dashboards')->only(['show']);
-        $this->middleware('permission:update-common-dashboards')->only(['index', 'edit', 'export', 'update', 'enable', 'disable', 'share']);
+        $this->middleware('permission:create-common-dashboards')->only('create', 'store', 'duplicate', 'import');
+        $this->middleware('permission:read-common-dashboards')->only('show');
+        $this->middleware('permission:update-common-dashboards')->only('index', 'edit', 'export', 'update', 'enable', 'disable', 'share');
         $this->middleware('permission:delete-common-dashboards')->only('destroy');
     }
 
@@ -47,34 +47,33 @@ class Dashboards extends Controller
      *
      * @return Response
      */
-    public function show()
+    public function show($dashboard_id = null)
     {
-        $dashboard_id = session('dashboard_id', 0);
+        $dashboard_id = $dashboard_id ?? session('dashboard_id');
 
-        // Change Dashboard
-        if (request()->get('dashboard_id', 0)) {
-            $dashboard_id = request()->get('dashboard_id');
-
-            session(['dashboard_id' => $dashboard_id]);
+        if (!empty($dashboard_id)) {
+            $dashboard = Dashboard::find($dashboard_id);
+        } else {
+            $dashboard = user()->dashboards()->enabled()->first();
         }
 
-        $dashboards = user()->dashboards()->enabled()->get();
-
-        if (!$dashboard_id) {
-            $dashboard_id = $dashboards->pluck('id')->first();
+        if (empty($dashboard)) {
+            $dashboard = $this->dispatch(new CreateDashboard([
+                'company_id' => session('company_id'),
+                'name' => trans_choice('general.dashboards', 1),
+                'with_widgets' => true,
+            ]));
         }
 
-        // Dashboard
-        $dashboard = Dashboard::find($dashboard_id);
+        session(['dashboard_id' => $dashboard->id]);
 
-        // Widgets
         $widgets = Widget::where('dashboard_id', $dashboard->id)->orderBy('sort', 'asc')->get()->filter(function ($widget) {
-            return Widgets::canRead($widget->class);
+            return Widgets::canShow($widget->class);
         });
 
         $financial_start = $this->getFinancialStart()->format('Y-m-d');
 
-        return view('common.dashboards.show', compact('dashboards', 'dashboard', 'widgets', 'financial_start'));
+        return view('common.dashboards.show', compact('dashboard', 'widgets', 'financial_start'));
     }
 
     /**
@@ -216,7 +215,7 @@ class Dashboards extends Controller
 
             flash($message)->success();
 
-            session(['dashboard_id' => user()->dashboards()->pluck('id')->first()]);
+            session(['dashboard_id' => user()->dashboards()->enabled()->pluck('id')->first()]);
         } else {
             $message = $response['message'];
 

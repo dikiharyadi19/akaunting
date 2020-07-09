@@ -21,6 +21,7 @@ return [
         'disabled'          => ':feature skal være deaktiveret!',
         'extension'         => ':extension udvidelse skal være indlæst!',
         'directory'         => ':directory folderen skal være skrivbar!',
+        'executable'        => 'The PHP CLI executable file is not defined/working or its version is not :php_version or higher! Please, ask your hosting company to set PHP_BINARY or PHP_PATH environment variable correctly.',
     ],
 
     'database' => [
@@ -38,6 +39,7 @@ return [
     ],
 
     'error' => [
+        'php_version'       => 'Fejl: Anmod din host om at bruge PHP :php_version eller højere for både HTTP og CLI',
         'connection'        => 'Error: Kunne ikke forbinde til databasen! Kontroller, at oplysningerne er korrekte.',
     ],
 

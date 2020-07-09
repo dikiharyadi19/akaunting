@@ -78,6 +78,7 @@ fabric.properties
 /storage/*.key
 /vendor
 /.idea
+/.history
 /.vscode
 /.vagrant
 Homestead.json
@@ -90,3 +91,6 @@ _ide_helper.php
 .phpstorm.meta.php
 /storage/debugbar/*
 .phpunit.result.cache
+modules/*
+!modules/OfflinePayments
+!modules/PaypalStandard

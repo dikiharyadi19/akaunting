@@ -4,6 +4,7 @@ namespace App\Utilities;
 
 use App\Jobs\Auth\CreateUser;
 use App\Jobs\Common\CreateCompany;
+use App\Utilities\Console;
 use Artisan;
 use Config;
 use DB;
@@ -115,6 +116,10 @@ class Installer
             $requirements[] = trans('install.requirements.directory', ['directory' => 'storage/logs']);
         }
 
+        if (Console::run('help') !== true) {
+            $requirements[] = trans('install.error.php_version', ['php_version' => AKAUNTING_PHP]);
+        }
+
         return $requirements;
     }
 
@@ -136,14 +141,14 @@ class Installer
         ]);
 	}
 
-    public static function createDbTables($host, $port, $database, $username, $password)
+    public static function createDbTables($host, $port, $database, $username, $password, $prefix = null)
     {
         if (!static::isDbValid($host, $port, $database, $username, $password)) {
             return false;
         }
 
         // Set database details
-        static::saveDbVariables($host, $port, $database, $username, $password);
+        static::saveDbVariables($host, $port, $database, $username, $password, $prefix);
 
         // Try to increase the maximum execution time
         set_time_limit(300); // 5 minutes
@@ -178,8 +183,8 @@ class Installer
             'database'  => $database,
             'username'  => $username,
             'password'  => $password,
-            'driver'    => env('DB_CONNECTION', 'mysql'),
-            'charset'   => env('DB_CHARSET', 'utf8mb4'),
+            'driver'    => $connection = config('database.default', 'mysql'),
+            'charset'   => config("database.connections.$connection.charset", 'utf8mb4'),
         ]);
 
         try {
@@ -194,9 +199,9 @@ class Installer
         return true;
     }
 
-    public static function saveDbVariables($host, $port, $database, $username, $password)
+    public static function saveDbVariables($host, $port, $database, $username, $password, $prefix = null)
     {
-        $prefix = strtolower(Str::random(3) . '_');
+        $prefix = !is_null($prefix) ? $prefix : strtolower(Str::random(3) . '_');
 
         // Update .env file
         static::updateEnv([
@@ -208,7 +213,7 @@ class Installer
             'DB_PREFIX'     =>  $prefix,
         ]);
 
-        $con = env('DB_CONNECTION', 'mysql');
+        $con = config('database.default', 'mysql');
 
         // Change current connection
         $db = Config::get('database.connections.' . $con);

@@ -15,14 +15,13 @@ use App\Models\Banking\Transaction;
 use App\Models\Common\Contact;
 use App\Models\Setting\Category;
 use App\Models\Setting\Currency;
-use App\Traits\Contacts;
 use App\Traits\Currencies;
 use App\Traits\DateTime;
 use App\Utilities\Modules;
 
 class Payments extends Controller
 {
-    use Contacts, Currencies, DateTime;
+    use Currencies, DateTime;
 
     /**
      * Display a listing of the resource.
@@ -31,11 +30,11 @@ class Payments extends Controller
      */
     public function index()
     {
-        $payments = Transaction::type('expense')->with(['account', 'category', 'contact'])->isNotTransfer()->collect(['paid_at'=> 'desc']);
+        $payments = Transaction::with('account', 'bill', 'category', 'contact')->expense()->isNotTransfer()->collect(['paid_at'=> 'desc']);
 
-        $vendors = Contact::type($this->getVendorTypes())->enabled()->orderBy('name')->pluck('name', 'id');
+        $vendors = Contact::vendor()->enabled()->orderBy('name')->pluck('name', 'id');
 
-        $categories = Category::type('expense')->enabled()->orderBy('name')->pluck('name', 'id');
+        $categories = Category::expense()->enabled()->orderBy('name')->pluck('name', 'id');
 
         $accounts = Account::enabled()->orderBy('name')->pluck('name', 'id');
 
@@ -67,9 +66,9 @@ class Payments extends Controller
 
         $currency = Currency::where('code', $account_currency_code)->first();
 
-        $vendors = Contact::type($this->getVendorTypes())->enabled()->orderBy('name')->pluck('name', 'id');
+        $vendors = Contact::vendor()->enabled()->orderBy('name')->pluck('name', 'id');
 
-        $categories = Category::type('expense')->enabled()->orderBy('name')->pluck('name', 'id');
+        $categories = Category::expense()->enabled()->orderBy('name')->pluck('name', 'id');
 
         $payment_methods = Modules::getPaymentMethods();
 
@@ -155,9 +154,9 @@ class Payments extends Controller
 
         $currency = Currency::where('code', $payment->currency_code)->first();
 
-        $vendors = Contact::type($this->getVendorTypes())->enabled()->orderBy('name')->pluck('name', 'id');
+        $vendors = Contact::vendor()->enabled()->orderBy('name')->pluck('name', 'id');
 
-        $categories = Category::type('expense')->enabled()->orderBy('name')->pluck('name', 'id');
+        $categories = Category::expense()->enabled()->orderBy('name')->pluck('name', 'id');
 
         $payment_methods = Modules::getPaymentMethods();
 

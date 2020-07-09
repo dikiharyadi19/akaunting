@@ -2,27 +2,29 @@
 
 namespace Modules\OfflinePayments\Providers;
 
-use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Modules\OfflinePayments\Listeners\InstallModule;
-use Modules\OfflinePayments\Listeners\ShowPaymentMethod;
-use Modules\OfflinePayments\Listeners\ShowSetting;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider as Provider;
 
-class Event extends ServiceProvider
+class Event extends Provider
 {
     /**
-     * The event listener mappings for the module.
+     * Determine if events and listeners should be automatically discovered.
      *
-     * @var array
+     * @return bool
      */
-    protected $listen = [
-        \App\Events\Module\Installed::class => [
-            InstallModule::class,
-        ],
-        \App\Events\Module\PaymentMethodShowing::class => [
-            ShowPaymentMethod::class,
-        ],
-        \App\Events\Module\SettingShowing::class => [
-            ShowSetting::class,
-        ],
-    ];
+    public function shouldDiscoverEvents()
+    {
+        return true;
+    }
+
+    /**
+     * Get the listener directories that should be used to discover events.
+     *
+     * @return array
+     */
+    protected function discoverEventsWithin()
+    {
+        return [
+            __DIR__ . '/../Listeners',
+        ];
+    }
 }

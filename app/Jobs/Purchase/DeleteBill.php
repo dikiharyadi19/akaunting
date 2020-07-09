@@ -3,7 +3,7 @@
 namespace App\Jobs\Purchase;
 
 use App\Abstracts\Job;
-use App\Models\Purchase\Bill;
+use App\Observers\Transaction;
 
 class DeleteBill extends Job
 {
@@ -22,20 +22,38 @@ class DeleteBill extends Job
     /**
      * Execute the job.
      *
-     * @return Bill
+     * @return boolean|Exception
      */
     public function handle()
     {
-        session(['deleting_bill' => true]);
+        $this->authorize();
 
-        $this->deleteRelationships($this->bill, [
-            'items', 'item_taxes', 'histories', 'transactions', 'recurring', 'totals'
-        ]);
+        \DB::transaction(function () {
+            Transaction::mute();
 
-        $this->bill->delete();
+            $this->deleteRelationships($this->bill, [
+                'items', 'item_taxes', 'histories', 'transactions', 'recurring', 'totals'
+            ]);
 
-        session()->forget('deleting_bill');
+            $this->bill->delete();
+
+            Transaction::unmute();
+        });
 
         return true;
+    }
+
+    /**
+     * Determine if this action is applicable.
+     *
+     * @return void
+     */
+    public function authorize()
+    {
+        if ($this->bill->transactions()->isReconciled()->count()) {
+            $message = trans('messages.warning.reconciled_doc', ['type' => trans_choice('general.bills', 1)]);
+
+            throw new \Exception($message);
+        }
     }
 }

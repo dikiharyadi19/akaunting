@@ -21,13 +21,15 @@ class DeleteTransfer extends Job
     /**
      * Execute the job.
      *
-     * @return mixed
+     * @return boolean|Exception
      */
     public function handle()
     {
-        $this->transfer->expense_transaction->delete();
-        $this->transfer->income_transaction->delete();
-        $this->transfer->delete();
+        \DB::transaction(function () {
+            $this->transfer->expense_transaction->delete();
+            $this->transfer->income_transaction->delete();
+            $this->transfer->delete();
+        });
 
         return true;
     }

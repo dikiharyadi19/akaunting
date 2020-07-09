@@ -3,7 +3,7 @@
 return [
 
     'invoice_new_customer' => [
-        'subject'       => '{invoice_number} fatura uluşturuldu',
+        'subject'       => '{invoice_number} fatura oluşturuldu',
         'body'          => 'Sayın {customer_name},<br /><br /><strong>{invoice_number}</strong> numarası ile faturanızı hazırladık.<br /><br />Aşağıdaki bağlantıdan faturanın detaylarını görüntüleyip ödemesini online olarak kredi/banka kartınızla yapabilirsiniz: <a href="{invoice_guest_link}">{invoice_number}</a>.<br /><br />Herhangi bir sorunuz olursa lütfen bize yazın.<br /><br />Kolay gelsin,<br />{company_name}',
     ],
 
@@ -39,7 +39,7 @@ return [
 
     'bill_remind_admin' => [
         'subject'       => '{bill_number} gider faturası için ödeme hatırlatması',
-        'body'          => 'Merhaba,<br /><br /><strong>{vendor_name} tedarikçinize {bill_number}</strong> numaralı gider faturası için ödeme hatırlatmasıdır.<br /><br />Faturanın tutarı {bill_total} ve son ödemesi <strong>{bill_due_date}</strong> tarhinde yapılması gerekir.<br /><br />Aşağıdaki bağlantıdan faturanın detaylarına ulaşabilirsiniz: <a href="{bill_admin_link}">{bill_number}</a>.<br /><br />Kolay gelsin,<br />{company_name}',
+        'body'          => 'Merhaba,<br /><br /><strong>{vendor_name}</strong> tedarikçinize <strong>{bill_number}</strong> numaralı gider faturası için ödeme hatırlatmasıdır.<br /><br />Faturanın tutarı {bill_total} ve son ödemesi <strong>{bill_due_date}</strong> tarhinde yapılması gerekir.<br /><br />Aşağıdaki bağlantıdan faturanın detaylarına ulaşabilirsiniz: <a href="{bill_admin_link}">{bill_number}</a>.<br /><br />Kolay gelsin,<br />{company_name}',
     ],
 
     'bill_recur_admin' => [

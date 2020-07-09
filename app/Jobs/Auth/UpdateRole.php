@@ -4,7 +4,6 @@ namespace App\Jobs\Auth;
 
 use App\Abstracts\Job;
 use App\Models\Auth\Role;
-use Artisan;
 
 class UpdateRole extends Job
 {
@@ -31,13 +30,13 @@ class UpdateRole extends Job
      */
     public function handle()
     {
-        $this->role->update($this->request->all());
+        \DB::transaction(function () {
+            $this->role->update($this->request->all());
 
-        if ($this->request->has('permissions')) {
-            $this->role->permissions()->sync($this->request->get('permissions'));
-        }
-
-        Artisan::call('cache:clear');
+            if ($this->request->has('permissions')) {
+                $this->role->permissions()->sync($this->request->get('permissions'));
+            }
+        });
 
         return $this->role;
     }

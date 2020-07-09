@@ -23,14 +23,18 @@
         :model="{{ $attributes['model'] }}"
         @endif
 
-        multiple="true"
+        :multiple="true"
 
         :add-new="{{ json_encode([
             'status' => true,
             'text' => trans('general.add_new'),
             'path' => isset($attributes['path']) ? $attributes['path']: false,
             'type' => isset($attributes['type']) ? $attributes['type'] : 'modal',
-            'field' => isset($attributes['field']) ? $attributes['field'] : 'name',
+            'field' => [
+                'key' => isset($attributes['field']['key']) ? $attributes['field']['key'] : 'id',
+                'value' => isset($attributes['field']['value']) ? $attributes['field']['value'] : 'name'
+            ],
+            'new_text' => trans('modules.new'),
             'buttons' => [
                 'cancel' => [
                     'text' => trans('general.cancel'),
@@ -48,11 +52,11 @@
         @endif
 
         @if (!empty($attributes['v-model']))
-        @interface="{{ $attributes['v-model'] . ' = $event' }}"
+        @interface="form.errors.clear('{{ $attributes['v-model'] }}'); {{ $attributes['v-model'] . ' = $event' }}"
         @elseif (!empty($attributes['data-field']))
-        @interface="{{ 'form.' . $attributes['data-field'] . '.' . $name . ' = $event' }}"
+        @interface="form.errors.clear('{{ 'form.' . $attributes['data-field'] . '.' . $name }}'); {{ 'form.' . $attributes['data-field'] . '.' . $name . ' = $event' }}"
         @else
-        @interface="form.{{ $name }} = $event"
+        @interface="form.errors.clear('{{ $name }}'); form.{{ $name }} = $event"
         @endif
 
         @if (!empty($attributes['change']))
@@ -60,11 +64,15 @@
         @endif
 
         @if (isset($attributes['readonly']))
-        :readonly="'{{ $attributes['readonly'] }}'"
+        :readonly="{{ $attributes['readonly'] }}"
         @endif
 
         @if (isset($attributes['disabled']))
-        :disabled="'{{ $attributes['disabled'] }}'"
+        :disabled="{{ $attributes['disabled'] }}"
+        @endif
+
+        @if (isset($attributes['show']))
+        v-if="{{ $attributes['show'] }}"
         @endif
 
         @if (isset($attributes['v-error-message']))

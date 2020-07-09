@@ -4,12 +4,11 @@
 
 @section('content')
     <div class="row" style="background-color:{{ setting('invoice.color') }} !important; -webkit-print-color-adjust: exact;">
-        <div class="col-58 m-first-column">
-            <div class="text company pl-2 m-fc-left">
+        <div class="col-58">
+            <div class="text company pl-2 mb-1 d-flex align-items-center">
                 <img src="{{ $logo }}" alt="{{ setting('company.name') }}"/>
-            </div>
-            <div class="text company m-fc-right">
-                <strong class="text-white">{{ setting('company.name') }}</strong>
+
+                <strong class="pl-2 text-white">{{ setting('company.name') }}</strong>
             </div>
         </div>
 
@@ -115,29 +114,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($invoice->items as $invoice_item)
-                            <tr>
-                                @stack('name_td_start')
-                                    <td class="item">
-                                        {{ $invoice_item->name }}
-                                        @if (!empty($invoice_item->item->description))
-                                            <br><small>{!! \Illuminate\Support\Str::limit($invoice_item->item->description, 500) !!}</small>
-                                        @endif
-                                    </td>
-                                @stack('name_td_end')
-
-                                @stack('quantity_td_start')
-                                    <td class="quantity">{{ $invoice_item->quantity }}</td>
-                                @stack('quantity_td_end')
-
-                                @stack('price_td_start')
-                                    <td class="price">@money($invoice_item->price, $invoice->currency_code, true)</td>
-                                @stack('price_td_end')
-
-                                @stack('total_td_start')
-                                    <td class="total">@money($invoice_item->total, $invoice->currency_code, true)</td>
-                                @stack('total_td_end')
-                            </tr>
+                        @foreach($invoice->items as $item)
+                            @include('partials.documents.item.print', ['document' => $invoice])
                         @endforeach
                     </tbody>
                 </table>
@@ -159,7 +137,7 @@
 
         <div class="col-42 float-right text-right">
             <div class="text company pr-2">
-                @foreach ($invoice->totals as $total)
+                @foreach ($invoice->totals_sorted as $total)
                     @if ($total->code != 'total')
                         @stack($total->code . '_td_start')
                             <strong class="float-left">{{ trans($total->title) }}:</strong>

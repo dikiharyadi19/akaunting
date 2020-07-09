@@ -3,7 +3,6 @@
 namespace App\Jobs\Auth;
 
 use App\Abstracts\Job;
-use Artisan;
 
 class DeleteUser extends Job
 {
@@ -22,15 +21,17 @@ class DeleteUser extends Job
     /**
      * Execute the job.
      *
-     * @return boolean
+     * @return boolean|Exception
      */
     public function handle()
     {
         $this->authorize();
 
-        $this->user->delete();
+        \DB::transaction(function () {
+            $this->user->delete();
 
-        Artisan::call('cache:clear');
+            $this->user->flushCache();
+        });
 
         return true;
     }

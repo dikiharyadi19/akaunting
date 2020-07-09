@@ -89,8 +89,6 @@ class Login extends Controller
             return response()->json($response);
         }
 
-        session(['dashboard_id' => $user->dashboards()->enabled()->pluck('id')->first()]);
-
         $response = [
             'status' => null,
             'success' => true,
@@ -115,7 +113,7 @@ class Login extends Controller
         auth()->logout();
 
         // Session destroy is required if stored in database
-        if (env('SESSION_DRIVER') == 'database') {
+        if (config('session.driver') == 'database') {
             $request = app('Illuminate\Http\Request');
             $request->session()->getHandler()->destroy($request->session()->getId());
         }

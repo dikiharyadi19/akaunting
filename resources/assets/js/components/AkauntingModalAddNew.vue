@@ -1,46 +1,52 @@
 <template>
     <SlideYUpTransition :duration="animationDuration">
-    <div class="modal modal-add-new fade"
-         @click.self="closeModal"
-         :class="[{'show d-block': show}, {'d-none': !show}]"
-         v-show="show"
-         tabindex="-1"
-         role="dialog"
-         :aria-hidden="!show">
-        <div class="modal-dialog" :class="modalDialogClass">
-            <slot name="modal-content">
-            <div class="modal-content">
-                <div class="card-header pb-2">
-                    <slot name="card-header">
-                        <h4 class="float-left"> {{ title }} </h4>
-                        <button type="button" class="close" @click="onCancel" aria-hidden="true">&times;</button>
-                    </slot>
-                </div>
-                <slot name="modal-body">
-                    <div class="modal-body pb-0" v-if="!is_component" v-html="message">
-                    </div>
-                    <div class="modal-body pb-0" v-else>
-                        <form id="form-create" method="POST" action="#"/>
-                        <component v-bind:is="component"></component>
+        <div class="modal modal-add-new fade"
+            @click.self="closeModal"
+            :class="[{'show d-block': show}, {'d-none': !show}]"
+            v-show="show"
+            tabindex="-1"
+            role="dialog"
+            :aria-hidden="!show">
+            <div class="modal-dialog" :class="modalDialogClass">
+                <slot name="modal-content">
+                    <div class="modal-content">
+                        <div class="card-header pb-2">
+                            <slot name="card-header">
+                                <h4 class="float-left"> {{ title }} </h4>
+                                <button type="button" class="close" @click="onCancel" aria-hidden="true">&times;</button>
+                            </slot>
+                        </div>
+
+                        <slot name="modal-body">
+                            <div class="modal-body pb-0" v-if="!is_component" v-html="message">
+                            </div>
+                            <div class="modal-body pb-0" v-else>
+                                <form id="form-create" method="POST" action="#"/>
+                                <component v-bind:is="component"></component>
+                            </div>
+                        </slot>
+
+                        <div class="card-footer border-top-0 pt-0">
+                            <slot name="card-footer">
+                                <div class="float-right">
+                                    <button type="button" class="btn btn-outline-secondary" :class="buttons.cancel.class" @click="onCancel">
+                                        {{ buttons.cancel.text }}
+                                    </button>
+
+                                    <a v-if="buttons.payment" :href="buttons.payment.url" class="btn btn-white" :class="buttons.payment.class">
+                                        {{ buttons.payment.text }}
+                                    </a>
+
+                                    <button  :disabled="form.loading" type="button" class="btn button-submit" :class="buttons.confirm.class" @click="onSubmit">
+                                        <div class="aka-loader"></div><span>{{ buttons.confirm.text }}</span>
+                                    </button>
+                                </div>
+                            </slot>
+                        </div>
                     </div>
                 </slot>
-                <div class="card-footer border-top-0 pt-0">
-                    <slot name="card-footer">
-                        <div class="float-right">
-                            <button type="button" class="btn btn-outline-secondary" :class="buttons.cancel.class" @click="onCancel">
-                                {{ buttons.cancel.text }}
-                            </button>
-
-                            <button :disabled="form.loading" type="button" class="btn button-submit" :class="buttons.confirm.class" @click="onSubmit">
-                                <div class="aka-loader"></div><span>{{ buttons.confirm.text }}</span>
-                            </button>
-                        </div>
-                    </slot>
-                </div>
             </div>
-            </slot>
         </div>
-    </div>
     </SlideYUpTransition>
 </template>
 
@@ -130,6 +136,12 @@ export default {
         };
     },
 
+    created: function () {
+        let documentClasses = document.body.classList;
+
+        documentClasses.add("modal-open");
+    },
+
     mounted() {
         if (this.is_component) {
             this.component = Vue.component('add-new-component', (resolve, reject) => {
@@ -209,7 +221,24 @@ export default {
                             })
                             .catch(error => {
                             });
-                        }
+                        },
+
+                        // Change bank account get money and currency rate
+                        async onChangePaymentAccount(account_id) {
+                            let payment_account = Promise.resolve(window.axios.get(url + '/banking/accounts/currency', {
+                                params: {
+                                    account_id: account_id
+                                }
+                            }));
+
+                            payment_account.then(response => {
+                                this.form.currency = response.data.currency_name;
+                                this.form.currency_code = response.data.currency_code;
+                                this.form.currency_rate = response.data.currency_rate;
+                            })
+                            .catch(error => {
+                            });
+                        },
                     }
                 })
             });
@@ -230,6 +259,10 @@ export default {
         },
 
         onCancel() {
+            let documentClasses = document.body.classList;
+
+            documentClasses.remove("modal-open");
+
             this.$emit("cancel");
         }
     },
@@ -251,5 +284,9 @@ export default {
 <style>
     .modal.show {
         background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-md {
+        max-width: 650px;
     }
 </style>

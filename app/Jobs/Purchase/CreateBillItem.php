@@ -10,20 +10,20 @@ use Illuminate\Support\Str;
 
 class CreateBillItem extends Job
 {
-    protected $request;
-
     protected $bill;
+
+    protected $request;
 
     /**
      * Create a new job instance.
      *
-     * @param  $request
      * @param  $bill
+     * @param  $request
      */
-    public function __construct($request, $bill)
+    public function __construct($bill, $request)
     {
-        $this->request = $request;
         $this->bill = $bill;
+        $this->request = $request;
     }
 
     /**
@@ -34,13 +34,25 @@ class CreateBillItem extends Job
     public function handle()
     {
         $item_id = !empty($this->request['item_id']) ? $this->request['item_id'] : 0;
+        $precision = config('money.' . $this->bill->currency_code . '.precision');
+
         $item_amount = (double) $this->request['price'] * (double) $this->request['quantity'];
 
+        $discount = 0;
         $item_discounted_amount = $item_amount;
 
-        // Apply discount to amount
+        // Apply line discount to amount
         if (!empty($this->request['discount'])) {
-            $item_discounted_amount = $item_amount - ($item_amount * ($this->request['discount'] / 100));
+            $discount += $this->request['discount'];
+
+            $item_discounted_amount = $item_amount -= ($item_amount * ($this->request['discount'] / 100));
+        }
+
+        // Apply global discount to amount
+        if (!empty($this->request['global_discount'])) {
+            $discount += $this->request['global_discount'];
+
+            $item_discounted_amount = $item_amount - ($item_amount * ($this->request['global_discount'] / 100));
         }
 
         $tax_amount = 0;
@@ -66,8 +78,8 @@ class CreateBillItem extends Job
                         $tax_amount = $tax->rate * (double) $this->request['quantity'];
 
                         $item_taxes[] = [
-                            'company_id' => $this->invoice->company_id,
-                            'invoice_id' => $this->invoice->id,
+                            'company_id' => $this->bill->company_id,
+                            'bill_id' => $this->bill->id,
                             'tax_id' => $tax_id,
                             'name' => $tax->name,
                             'amount' => $tax_amount,
@@ -99,7 +111,7 @@ class CreateBillItem extends Job
                 $item_base_rate = $item_amount / (1 + collect($inclusives)->sum('rate') / 100);
 
                 foreach ($inclusives as $inclusive) {
-                    $item_tax_total += $tax_amount = $item_base_rate * ($inclusive->rate / 100);
+                    $tax_amount = $item_base_rate * ($inclusive->rate / 100);
 
                     $item_taxes[] = [
                         'company_id' => $this->bill->company_id,
@@ -108,16 +120,16 @@ class CreateBillItem extends Job
                         'name' => $inclusive->name,
                         'amount' => $tax_amount,
                     ];
+
+                    $item_tax_total += $tax_amount;
                 }
 
-                $item_amount = ($item_amount - $item_tax_total) / (1 - $this->request['discount'] / 100);
+                $item_amount = ($item_amount - $item_tax_total) / (1 - $discount / 100);
             }
 
             if ($compounds) {
                 foreach ($compounds as $compound) {
                     $tax_amount = (($item_discounted_amount + $item_tax_total) / 100) * $compound->rate;
-
-                    $item_tax_total += $tax_amount;
 
                     $item_taxes[] = [
                         'company_id' => $this->bill->company_id,
@@ -126,6 +138,8 @@ class CreateBillItem extends Job
                         'name' => $compound->name,
                         'amount' => $tax_amount,
                     ];
+
+                    $item_tax_total += $tax_amount;
                 }
             }
         }
@@ -136,9 +150,10 @@ class CreateBillItem extends Job
             'item_id' => $item_id,
             'name' => Str::limit($this->request['name'], 180, ''),
             'quantity' => (double) $this->request['quantity'],
-            'price' => (double) $this->request['price'],
-            'tax' => $item_tax_total,
-            'total' => $item_amount,
+            'price' => round($this->request['price'], $precision),
+            'tax' => round($item_tax_total, $precision),
+            'discount_rate' => !empty($this->request['discount']) ? $this->request['discount'] : 0,
+            'total' => round($item_amount, $precision),
         ]);
 
         $bill_item->item_taxes = false;
@@ -152,6 +167,7 @@ class CreateBillItem extends Job
 
             foreach ($item_taxes as $item_tax) {
                 $item_tax['bill_item_id'] = $bill_item->id;
+                $item_tax['amount'] = round($item_tax['amount'], $precision);
 
                 BillItemTax::create($item_tax);
             }

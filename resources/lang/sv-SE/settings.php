@@ -29,6 +29,12 @@ return [
             'before'        => 'Innan nummret',
             'after'         => 'Efter nummret',
         ],
+        'discount_location' => [
+            'name'          => 'Discount Location',
+            'item'          => 'At line',
+            'total'         => 'At total',
+            'both'          => 'Both line and total',
+        ],
     ],
 
     'invoice' => [
@@ -52,6 +58,10 @@ return [
         'subheading'        => 'Underrubrik',
         'due_receipt'       => 'Förfaller vid mottagandet',
         'due_days'          => 'Förfaller inom :days dagar',
+        'choose_template'   => 'Välj fakturamall',
+        'default'           => 'Standard',
+        'classic'           => 'Klassisk',
+        'modern'            => 'Modern',
     ],
 
     'default' => [

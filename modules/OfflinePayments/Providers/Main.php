@@ -28,7 +28,7 @@ class Main extends Provider
     }
 
     /**
-     * Register views.
+     * Load views.
      *
      * @return void
      */
@@ -38,13 +38,13 @@ class Main extends Provider
     }
 
     /**
-     * Register translations.
+     * Load translations.
      *
      * @return void
      */
     public function loadTranslations()
     {
-        $this->loadTranslationsFrom(__DIR__ .'/../Resources/lang', 'offline-payments');
+        $this->loadTranslationsFrom(__DIR__ . '/../Resources/lang', 'offline-payments');
     }
 
     /**

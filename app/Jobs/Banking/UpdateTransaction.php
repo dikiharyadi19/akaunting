@@ -30,18 +30,36 @@ class UpdateTransaction extends Job
      */
     public function handle()
     {
-        $this->transaction->update($this->request->all());
+        $this->authorize();
 
-        // Upload attachment
-        if ($this->request->file('attachment')) {
-            $media = $this->getMedia($this->request->file('attachment'), 'transactions');
+        \DB::transaction(function () {
+            $this->transaction->update($this->request->all());
 
-            $this->transaction->attachMedia($media, 'attachment');
-        }
+            // Upload attachment
+            if ($this->request->file('attachment')) {
+                $media = $this->getMedia($this->request->file('attachment'), 'transactions');
 
-        // Recurring
-        $this->transaction->updateRecurring();
+                $this->transaction->attachMedia($media, 'attachment');
+            }
+
+            // Recurring
+            $this->transaction->updateRecurring();
+        });
 
         return $this->transaction;
+    }
+
+    /**
+     * Determine if this action is applicable.
+     *
+     * @return void
+     */
+    public function authorize()
+    {
+        if ($this->transaction->reconciled) {
+            $message = trans('messages.warning.reconciled_tran');
+
+            throw new \Exception($message);
+        }
     }
 }

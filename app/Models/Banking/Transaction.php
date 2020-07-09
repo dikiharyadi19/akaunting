@@ -4,12 +4,12 @@ namespace App\Models\Banking;
 
 use App\Abstracts\Model;
 use App\Models\Setting\Category;
+use App\Models\Setting\Currency;
 use App\Traits\Currencies;
 use App\Traits\DateTime;
 use App\Traits\Media;
 use App\Traits\Recurring;
 use Bkwld\Cloner\Cloneable;
-use Date;
 
 class Transaction extends Model
 {
@@ -97,6 +97,28 @@ class Transaction extends Model
     }
 
     /**
+     * Scope to include only income.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeIncome($query)
+    {
+        return $query->where($this->table . '.type', '=', 'income');
+    }
+
+    /**
+     * Scope to include only expense.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeExpense($query)
+    {
+        return $query->where($this->table . '.type', '=', 'expense');
+    }
+
+    /**
      * Get only transfers.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
@@ -175,6 +197,33 @@ class Transaction extends Model
     }
 
     /**
+     * Get only reconciled.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeIsReconciled($query)
+    {
+        return $query->where('reconciled', 1);
+    }
+
+    /**
+     * Get only not reconciled.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeIsNotReconciled($query)
+    {
+        return $query->where('reconciled', 0);
+    }
+
+    public function onCloning($src, $child = null)
+    {
+        $this->document_id = null;
+    }
+
+    /**
      * Convert amount to double.
      *
      * @param  string  $value
@@ -197,6 +246,26 @@ class Transaction extends Model
     }
 
     /**
+     * Convert amount to double.
+     *
+     * @return float
+     */
+    public function getAmountForAccountAttribute()
+    {
+        $amount = $this->amount;
+
+        // Convert amount if not same currency
+        if ($this->account->currency_code != $this->currency_code) {
+            $to_code = $this->account->currency_code;
+            $to_rate = config('money.' . $this->account->currency_code . '.rate');
+
+            $amount = $this->convertBetween($amount, $this->currency_code, $this->currency_rate, $to_code, $to_rate);
+        }
+
+        return $amount;
+    }
+
+    /**
      * Get the current balance.
      *
      * @return string
@@ -210,10 +279,5 @@ class Transaction extends Model
         }
 
         return $this->getMedia('attachment')->last();
-    }
-
-    public function getDivideConvertedAmount($format = false)
-    {
-        return $this->divide($this->amount, $this->currency_code, $this->currency_rate, $format);
     }
 }

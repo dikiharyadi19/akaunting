@@ -9,6 +9,8 @@
         :form-classes="[{'has-error': form.errors.get('{{ $name }}') }]"
         @endif
 
+        :group_class="'{{ $group_class }}'"
+
         icon="fa fa-{{ $icon }}"
         title="{{ $text }}"
         placeholder="{{ trans('general.form.select.field', ['field' => $text]) }}"
@@ -40,19 +42,27 @@
         }"
 
         @if (!empty($attributes['v-model']))
-        @interface="{{ $attributes['v-model'] . ' = $event' }}"
+        @interface="form.errors.clear('{{ $attributes['v-model'] }}'); {{ $attributes['v-model'] . ' = $event' }}"
         @elseif (!empty($attributes['data-field']))
-        @interface="{{ 'form.' . $attributes['data-field'] . '.' . $name . ' = $event' }}"
+        @interface="form.errors.clear('{{ 'form.' . $attributes['data-field'] . '.' . $name }}'); {{ 'form.' . $attributes['data-field'] . '.' . $name . ' = $event' }}"
         @else
-        @interface="form.{{ $name }} = $event"
+        @interface="form.errors.clear('{{ $name }}'); form.{{ $name }} = $event"
+        @endif
+
+        @if (isset($attributes['required']))
+        :required="{{ ($attributes['required']) ? 'true' : 'false' }}"
         @endif
 
         @if (isset($attributes['readonly']))
-        :readonly="'{{ $attributes['readonly'] }}'"
+        :readonly="{{ $attributes['readonly'] }}"
         @endif
 
         @if (isset($attributes['disabled']))
-        :disabled="'{{ $attributes['disabled'] }}'"
+        :disabled="{{ $attributes['disabled'] }}"
+        @endif
+
+        @if (isset($attributes['show']))
+        v-if="{{ $attributes['show'] }}"
         @endif
 
         @if (isset($attributes['v-error-message']))

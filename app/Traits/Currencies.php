@@ -3,46 +3,57 @@
 namespace App\Traits;
 
 use Akaunting\Money\Money;
-use Akaunting\Money\Currency;
+use InvalidArgumentException;
+use OutOfBoundsException;
+use UnexpectedValueException;
 
 trait Currencies
 {
-    public function convert($amount, $from, $to, $rate, $format = false)
+    public function convert($method, $amount, $from, $to, $rate, $format = false)
     {
-        $money = Money::$from($amount, $format);
+        $money = Money::$to($amount, $format);
 
         // No need to convert same currency
         if ($from == $to) {
             return $format ? $money->format() : $money->getAmount();
         }
 
-        $money = $money->convert(new Currency($to), (double) $rate);
+        try {
+            $money = $money->$method((double) $rate);
+        } catch (InvalidArgumentException | OutOfBoundsException | UnexpectedValueException $e) {
+            logger($e->getMessage());
+
+            return 0;
+        }
 
         return $format ? $money->format() : $money->getAmount();
     }
 
-    public function divide($amount, $code, $rate, $format = false)
+    public function convertToDefault($amount, $from, $rate, $format = false, $default = null)
     {
-        $money = Money::$code($amount, $format);
+        $default_currency = $default ?? $this->getDefaultCurrency();
 
-        $money = $money->divide((double) $rate);
-
-        return $format ? $money->format() : $money->getAmount();
+        return $this->convert('divide', $amount, $from, $default_currency, $rate, $format);
     }
 
-    public function getAmount($with_tax = true)
+    public function convertFromDefault($amount, $to, $rate, $format = false, $default = null)
     {
-        return $with_tax ? $this->amount : (isset($this->amount_without_tax) ? $this->amount_without_tax : $this->amount);
+        $default_currency = $default ?? $this->getDefaultCurrency();
+
+        return $this->convert('multiply', $amount, $default_currency, $to, $rate, $format);
     }
 
-    public function convertToDefault($amount, $from, $rate, $format = false)
+    public function convertBetween($amount, $from_code, $from_rate, $to_code, $to_rate)
     {
-        return $this->convert($amount, $from, $this->getDefaultCurrency(), $rate, $format);
-    }
+        $default_amount = $amount;
 
-    public function convertFromDefault($amount, $to, $rate, $format = false)
-    {
-        return $this->convert($amount, $this->getDefaultCurrency(), $to, $rate, $format);
+        if ($from_code != setting('default.currency')) {
+            $default_amount = $this->convertToDefault($amount, $from_code, $from_rate);
+        }
+
+        $converted_amount = $this->convertFromDefault($default_amount, $to_code, $to_rate, false, $from_code);
+
+        return $converted_amount;
     }
 
     public function getAmountConvertedToDefault($format = false, $with_tax = true)
@@ -55,18 +66,23 @@ trait Currencies
         return $this->convertFromDefault($this->getAmount($with_tax), $this->currency_code, $this->currency_rate, $format);
     }
 
-    public function getAmountConvertedFromCustomDefault($format = false, $with_tax = true)
+    public function getAmount($with_tax = true)
     {
-        return $this->convert($this->getAmount($with_tax), $this->default_currency_code, $this->currency_code, $this->currency_rate, $format);
+        return $with_tax ? $this->amount : (isset($this->amount_without_tax) ? $this->amount_without_tax : $this->amount);
     }
 
-    public function getAmountDivided($format = false, $with_tax = true)
+    public function getDefaultCurrency()
     {
-        return $this->divide($this->getAmount($with_tax), $this->currency_code, $this->currency_rate, $format);
+        return !empty($this->default_currency_code) ? $this->default_currency_code : setting('default.currency', 'USD');
     }
 
-    protected function getDefaultCurrency()
+    public function setDefaultCurrency($code)
     {
-        return setting('default.currency', 'USD');
+        $this->default_currency_code = $code;
+    }
+
+    public function unsetDefaultCurrency()
+    {
+        unset($this->default_currency_code);
     }
 }

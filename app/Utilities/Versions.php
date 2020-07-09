@@ -2,12 +2,11 @@
 
 namespace App\Utilities;
 
-use Akaunting\Module\Module;
 use App\Traits\SiteApi;
 use Cache;
 use Date;
+use GrahamCampbell\Markdown\Facades\Markdown;
 use Illuminate\Support\Arr;
-use Parsedown;
 
 class Versions
 {
@@ -27,8 +26,6 @@ class Versions
             return $output;
         }
 
-        $parsedown = new Parsedown();
-
         $releases = json_decode($json);
 
         foreach ($releases as $release) {
@@ -46,7 +43,7 @@ class Versions
 
             $output .= '<h2><span class="badge badge-pill badge-success">' . $release->tag_name . '</span></h2>';
 
-            $output .= $parsedown->text($release->body);
+            $output .= Markdown::convertToHtml($release->body);
 
             $output .= '<hr>';
         }
@@ -91,7 +88,7 @@ class Versions
                 $module = module($module);
             }
 
-            if (!$module instanceof Module) {
+            if (!$module instanceof \Akaunting\Module\Module) {
                 continue;
             }
 

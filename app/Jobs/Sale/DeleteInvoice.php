@@ -3,7 +3,7 @@
 namespace App\Jobs\Sale;
 
 use App\Abstracts\Job;
-use App\Models\Sale\Invoice;
+use App\Observers\Transaction;
 
 class DeleteInvoice extends Job
 {
@@ -22,20 +22,38 @@ class DeleteInvoice extends Job
     /**
      * Execute the job.
      *
-     * @return Invoice
+     * @return boolean|Exception
      */
     public function handle()
     {
-        session(['deleting_invoice' => true]);
+        $this->authorize();
 
-        $this->deleteRelationships($this->invoice, [
-            'items', 'item_taxes', 'histories', 'transactions', 'recurring', 'totals'
-        ]);
+        \DB::transaction(function () {
+            Transaction::mute();
 
-        $this->invoice->delete();
+            $this->deleteRelationships($this->invoice, [
+                'items', 'item_taxes', 'histories', 'transactions', 'recurring', 'totals'
+            ]);
 
-        session()->forget('deleting_invoice');
+            $this->invoice->delete();
+
+            Transaction::unmute();
+        });
 
         return true;
+    }
+
+    /**
+     * Determine if this action is applicable.
+     *
+     * @return void
+     */
+    public function authorize()
+    {
+        if ($this->invoice->transactions()->isReconciled()->count()) {
+            $message = trans('messages.warning.reconciled_doc', ['type' => trans_choice('general.invoices', 1)]);
+
+            throw new \Exception($message);
+        }
     }
 }

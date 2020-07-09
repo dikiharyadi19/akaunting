@@ -18,9 +18,9 @@ class Item extends Controller
     public function __construct()
     {
         // Add CRUD permission check
-        $this->middleware('permission:create-modules-item')->only(['install']);
-        $this->middleware('permission:update-modules-item')->only(['update', 'enable', 'disable']);
-        $this->middleware('permission:delete-modules-item')->only(['uninstall']);
+        $this->middleware('permission:create-modules-item')->only('install');
+        $this->middleware('permission:update-modules-item')->only('update', 'enable', 'disable');
+        $this->middleware('permission:delete-modules-item')->only('uninstall');
     }
 
     /**
@@ -38,7 +38,7 @@ class Item extends Controller
         $module = $this->getModule($alias);
 
         if (empty($module)) {
-            return redirect('apps/home')->send();
+            return redirect()->route('apps.home.index')->send();
         }
 
         if ($this->moduleExists($alias) && ($model = Module::alias($alias)->first())) {
@@ -84,19 +84,19 @@ class Item extends Controller
         // Download
         $steps[] = [
             'text' => trans('modules.installation.download', ['module' => $name]),
-            'url'  => url('apps/download')
+            'url'  => route('apps.download')
         ];
 
         // Unzip
         $steps[] = [
             'text' => trans('modules.installation.unzip', ['module' => $name]),
-            'url'  => url('apps/unzip')
+            'url'  => route('apps.unzip')
         ];
 
         // Download
         $steps[] = [
             'text' => trans('modules.installation.install', ['module' => $name]),
-            'url'  => url('apps/install')
+            'url'  => route('apps.install')
         ];
 
         return response()->json([
@@ -169,111 +169,46 @@ class Item extends Controller
     {
         $json = $this->uninstallModule($alias);
 
-        $module = Module::alias($alias)->first();
+        if ($json['success']) {
+            $message = trans('modules.uninstalled', ['module' => $json['data']['name']]);
 
-        $data = [
-            'company_id' => session('company_id'),
-            'module_id' => $module->id,
-            'category' => $json['data']['category'],
-            'version' => $json['data']['version'],
-            'description' => trans('modules.uninstalled', ['module' => $json['data']['name']]),
-        ];
+            flash($message)->success();
+        }
 
-        ModuleHistory::create($data);
-
-        $module->delete();
-
-        $message = trans('modules.uninstalled', ['module' => $json['data']['name']]);
-
-        flash($message)->success();
-
-        return redirect('apps/' . $alias)->send();
-    }
-
-    public function update($alias)
-    {
-        $json = $this->updateModule($alias);
-
-        $module = Module::alias($alias)->first();
-
-        $data = [
-            'company_id' => session('company_id'),
-            'module_id' => $module->id,
-            'category' => $json['data']['category'],
-            'version' => $json['data']['version'],
-            'description' => trans_choice('modules.updated', $json['data']['name']),
-        ];
-
-        ModuleHistory::create($data);
-
-        $message = trans('modules.updated', ['module' => $json['data']['name']]);
-
-        flash($message)->success();
-
-        return redirect('apps/' . $alias)->send();
+        return redirect()->route('apps.app.show', $alias)->send();
     }
 
     public function enable($alias)
     {
         $json = $this->enableModule($alias);
 
-        $module = Module::alias($alias)->first();
+        if ($json['success']) {
+            $message = trans('modules.enabled', ['module' => $json['data']['name']]);
 
-        $data = [
-            'company_id' => session('company_id'),
-            'module_id' => $module->id,
-            'category' => $json['data']['category'],
-            'version' => $json['data']['version'],
-            'description' => trans('modules.enabled', ['module' => $json['data']['name']]),
-        ];
+            flash($message)->success();
+        }
 
-        $module->enabled = 1;
-
-        $module->save();
-
-        ModuleHistory::create($data);
-
-        $message = trans('modules.enabled', ['module' => $json['data']['name']]);
-
-        flash($message)->success();
-
-        return redirect('apps/' . $alias)->send();
+        return redirect()->route('apps.app.show', $alias)->send();
     }
 
     public function disable($alias)
     {
         $json = $this->disableModule($alias);
 
-        $module = Module::alias($alias)->first();
+        if ($json['success']) {
+            $message = trans('modules.disabled', ['module' => $json['data']['name']]);
 
-        $data = [
-            'company_id' => session('company_id'),
-            'module_id' => $module->id,
-            'category' => $json['data']['category'],
-            'version' => $json['data']['version'],
-            'description' => trans('modules.disabled', ['module' => $json['data']['name']]),
-        ];
+            flash($message)->success();
+        }
 
-        $module->enabled = 0;
-
-        $module->save();
-
-        ModuleHistory::create($data);
-
-        $message = trans('modules.disabled', ['module' => $json['data']['name']]);
-
-        flash($message)->success();
-
-        return redirect('apps/' . $alias)->send();
+        return redirect()->route('apps.app.show', $alias)->send();
     }
 
     public function reviews($alias, Request $request)
     {
-        $page = $request['page'];
-
         $data = [
             'query' => [
-                'page' => ($page) ? $page : 1,
+                'page' => $request->get('page', 1),
             ]
         ];
 
@@ -284,7 +219,7 @@ class Item extends Controller
         return response()->json([
             'success' => true,
             'error' => false,
-            'data' => null,
+            'data' => $reviews,
             'message' => null,
             'html' => $html,
         ]);
@@ -294,11 +229,11 @@ class Item extends Controller
     {
         $documentation = $this->getDocumentation($alias);
 
-        if (empty($documentation)) {
-            return redirect('apps/' . $alias)->send();
-        }
+        $back = route('apps.app.show', $alias);
 
-        $back = 'apps/' . $alias;
+        if (empty($documentation)) {
+            return redirect()->route($back)->send();
+        }
 
         return view('modules.item.documentation', compact('documentation', 'back'));
     }

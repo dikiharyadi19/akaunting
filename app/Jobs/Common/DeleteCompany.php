@@ -25,20 +25,22 @@ class DeleteCompany extends Job
     /**
      * Execute the job.
      *
-     * @return Company
+     * @return boolean|Exception
      */
     public function handle()
     {
         $this->authorize();
 
-        $this->deleteRelationships($this->company, [
-            'accounts', 'bills', 'bill_histories', 'bill_items', 'bill_item_taxes', 'bill_totals', 'categories',
-            'contacts', 'currencies', 'dashboards', 'email_templates', 'invoices', 'invoice_histories', 'invoice_items',
-            'invoice_item_taxes', 'invoice_totals', 'items', 'modules', 'module_histories', 'reconciliations',
-            'recurring', 'reports', 'settings', 'taxes', 'transactions', 'transfers', 'widgets',
-        ]);
+        \DB::transaction(function () {
+            $this->deleteRelationships($this->company, [
+                'accounts', 'bills', 'bill_histories', 'bill_items', 'bill_item_taxes', 'bill_totals', 'categories',
+                'contacts', 'currencies', 'dashboards', 'email_templates', 'invoices', 'invoice_histories', 'invoice_items',
+                'invoice_item_taxes', 'invoice_totals', 'items', 'modules', 'module_histories', 'reconciliations',
+                'recurring', 'reports', 'settings', 'taxes', 'transactions', 'transfers', 'widgets',
+            ]);
 
-        $this->company->delete();
+            $this->company->delete();
+        });
 
         return true;
     }

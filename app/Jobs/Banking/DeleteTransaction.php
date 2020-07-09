@@ -28,8 +28,10 @@ class DeleteTransaction extends Job
     {
         $this->authorize();
 
-        $this->transaction->recurring()->delete();
-        $this->transaction->delete();
+        \DB::transaction(function () {
+            $this->transaction->recurring()->delete();
+            $this->transaction->delete();
+        });
 
         return true;
     }
@@ -41,6 +43,12 @@ class DeleteTransaction extends Job
      */
     public function authorize()
     {
+        if ($this->transaction->reconciled) {
+            $message = trans('messages.warning.reconciled_tran');
+
+            throw new \Exception($message);
+        }
+
         if ($this->transaction->category->id == Category::transfer()) {
             throw new \Exception('Unauthorized');
         }

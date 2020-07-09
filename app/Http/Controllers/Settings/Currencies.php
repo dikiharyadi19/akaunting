@@ -56,7 +56,15 @@ class Currencies extends Controller
             $codes[$key] = $key;
         }
 
-        return view('settings.currencies.create', compact('codes'));
+        $precisions = (object) [
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+        ];
+
+        return view('settings.currencies.create', compact('codes', 'precisions'));
     }
 
     /**
@@ -114,7 +122,15 @@ class Currencies extends Controller
         // Set default currency
         $currency->default_currency = ($currency->code == setting('default.currency')) ? 1 : 0;
 
-        return view('settings.currencies.edit', compact('currency', 'codes'));
+        $precisions = (object) [
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+        ];
+
+        return view('settings.currencies.edit', compact('currency', 'codes', 'precisions'));
     }
 
     /**
@@ -233,10 +249,12 @@ class Currencies extends Controller
 
         $code = request('code');
 
+        $currencies = Currency::all()->pluck('rate', 'code');
+
         if ($code) {
             $currency = config('money.' . $code);
 
-            $currency['rate'] = isset($currency['rate']) ? $currency['rate'] : null;
+            $currency['rate'] = isset($currencies[$code]) ? $currencies[$code] : null;
             $currency['symbol_first'] = $currency['symbol_first'] ? 1 : 0;
 
             $json = (object) $currency;

@@ -13,6 +13,7 @@ return [
     'price'                 => 'Pris',
     'sub_total'             => 'Delsumma',
     'discount'              => 'Rabatt',
+    'item_discount'         => 'Line Discount',
     'tax_total'             => 'Summa moms',
     'total'                 => 'Summa',
 
@@ -28,7 +29,9 @@ return [
     'histories'             => 'Historia',
     'payments'              => 'Betalningar',
     'add_payment'           => 'Lägg till betalning',
+    'mark_paid'             => 'Markera som betald',
     'mark_received'         => 'Markerad som mottagen',
+    'mark_cancelled'        => 'Mark Cancelled',
     'download_pdf'          => 'Ladda ner PDF',
     'send_mail'             => 'Skicka E-post',
     'create_bill'           => 'Skapa faktura',
@@ -40,10 +43,15 @@ return [
         'received'          => 'Mottagen',
         'partial'           => 'Delvis',
         'paid'              => 'Betald',
+        'overdue'           => 'Förfallen',
+        'unpaid'            => 'Obetald',
+        'cancelled'         => 'Cancelled',
     ],
 
     'messages' => [
-        'received'          => 'Faktura markerad som mottagen!',
+        'marked_received'   => 'Bill marked as received!',
+        'marked_paid'       => 'Fakturan markerad som betald!',
+        'marked_cancelled'  => 'Bill marked as cancelled!',
         'draft'             => 'Detta är ett <b>DRAFT</b> förslag och kommer att stämmas av innan den mottages.',
 
         'status' => [

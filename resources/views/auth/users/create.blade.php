@@ -31,11 +31,15 @@
 
                     @if (setting('default.use_gravatar', '0') == '1')
                         @stack('picture_input_start')
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-6 disabled">
                                 {!! Form::label('picture', trans_choice('general.pictures', 1), ['class' => 'control-label']) !!}
-                                <div class="input-group">
-                                    <div class="input-group-addon"><i class="fa fa-picture-o"></i></div>
-                                    {!! Form::text('fake_picture', null, ['id' => 'fake_picture', 'class' => 'form-control', 'disabled' => 'disabled', 'placeholder' => trans('settings.appearance.use_gravatar')]) !!}
+                                <div class="input-group input-group-merge">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="fa fa-image"></i>
+                                        </span>
+                                    </div>
+                                    {!! Form::text('fake_picture', null, ['id' => 'fake_picture', 'class' => 'form-control', 'disabled' => 'disabled', 'placeholder' => trans('settings.default.use_gravatar')]) !!}
                                 </div>
                             </div>
                         @stack('picture_input_end')
@@ -44,7 +48,7 @@
                     @endif
 
                     @permission('read-common-companies')
-                        {{ Form::checkboxGroup('companies', trans_choice('general.companies', 2), $companies, 'name') }}
+                    {{ Form::multiSelectRemoteGroup('companies', trans_choice('general.companies', 2), 'user', $companies, [], ['required' => 'required', 'remote_action' => route('companies.autocomplete'), 'remote_type' => 'company']) }}
                     @endpermission
 
                     @permission('read-auth-roles')
@@ -63,6 +67,15 @@
         {!! Form::close() !!}
     </div>
 @endsection
+
+@push('stylesheet')
+    <style type="text/css">
+        .el-select .el-select__tags > span {
+            display: flex;
+            margin-bottom: -75px;
+        }
+    </style>
+@endpush
 
 @push('scripts_start')
     <script src="{{ asset('public/js/auth/users.js?v=' . version('short')) }}"></script>
